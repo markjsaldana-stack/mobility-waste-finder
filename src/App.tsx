@@ -100,10 +100,6 @@ export default function App() {
       setError(null)
       try {
         const text = await file.text()
-        if (/brightfin_sample_invoice/i.test(file.name)) {
-          runSampleText(text)
-          return
-        }
         const table = parseCsvTable(text)
         if (!table.ok) {
           clearReviewTimer()
@@ -136,7 +132,7 @@ export default function App() {
         setBusy(false)
       }
     },
-    [clearReviewTimer, runMapped, runSampleText],
+    [clearReviewTimer, runMapped],
   )
 
   const onSample = useCallback(async () => {
