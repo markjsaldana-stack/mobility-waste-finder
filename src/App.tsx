@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react"
+import { ColumnMapper } from "./ColumnMapper"
 import { EmptyState } from "./EmptyState"
 import { FindingsView } from "./FindingsView"
 import { MemoView } from "./MemoView"
 import { ReviewingView } from "./ReviewingView"
 import { analyze } from "./engine/analyze"
-import { parseInvoiceCsv } from "./engine/parse"
+import { REQUIRED_COLUMNS } from "./engine/fields"
+import { schemaIsComplete, skippedFields, suggestMapping, type ColumnMapping } from "./engine/mapping"
+import { parseCsvTable, parseInvoiceCsv, rowsFromMapping, type CsvTable } from "./engine/parse"
 import type { Analysis } from "./engine/types"
 
 const SAMPLE_PATH = "/brightfin_sample_invoice_2026-08.csv"
@@ -19,6 +22,9 @@ function prefersReducedMotion(): boolean {
 export default function App() {
   const [analysis, setAnalysis] = useState<Analysis | null>(null)
   const [incoming, setIncoming] = useState<Analysis | null>(null)
+  const [pending, setPending] = useState<{ table: CsvTable; mapping: ColumnMapping; fileName: string } | null>(
+    null,
+  )
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [screen, setScreen] = useState<Screen>("findings")
@@ -37,6 +43,7 @@ export default function App() {
     (next: Analysis) => {
       clearReviewTimer()
       setError(null)
+      setPending(null)
       setScreen("findings")
       if (prefersReducedMotion()) {
         setIncoming(null)
@@ -54,17 +61,35 @@ export default function App() {
     [clearReviewTimer],
   )
 
-  const run = useCallback(
-    (text: string, sample: boolean) => {
+  const runMapped = useCallback(
+    (table: CsvTable, mapping: ColumnMapping, sample: boolean) => {
+      const parsed = rowsFromMapping(table, mapping)
+      if (!parsed.ok) {
+        setError(parsed.error)
+        return
+      }
+      present(
+        analyze(parsed.rows, {
+          sample,
+          skipped: skippedFields(mapping),
+        }),
+      )
+    },
+    [present],
+  )
+
+  const runSampleText = useCallback(
+    (text: string) => {
       const parsed = parseInvoiceCsv(text)
       if (!parsed.ok) {
         clearReviewTimer()
         setIncoming(null)
         setAnalysis(null)
+        setPending(null)
         setError(parsed.error)
         return
       }
-      present(analyze(parsed.rows, sample))
+      present(analyze(parsed.rows, { sample: true }))
     },
     [clearReviewTimer, present],
   )
@@ -75,18 +100,43 @@ export default function App() {
       setError(null)
       try {
         const text = await file.text()
-        const sample = /brightfin_sample_invoice/i.test(file.name)
-        run(text, sample)
+        if (/brightfin_sample_invoice/i.test(file.name)) {
+          runSampleText(text)
+          return
+        }
+        const table = parseCsvTable(text)
+        if (!table.ok) {
+          clearReviewTimer()
+          setIncoming(null)
+          setAnalysis(null)
+          setPending(null)
+          setError(table.error)
+          return
+        }
+        if (schemaIsComplete(table.table.headers)) {
+          const mapping = Object.fromEntries(REQUIRED_COLUMNS.map((key) => [key, key])) as ColumnMapping
+          runMapped(table.table, mapping, false)
+          return
+        }
+        clearReviewTimer()
+        setAnalysis(null)
+        setIncoming(null)
+        setPending({
+          table: table.table,
+          mapping: suggestMapping(table.table.headers),
+          fileName: file.name,
+        })
       } catch {
         clearReviewTimer()
         setIncoming(null)
         setAnalysis(null)
+        setPending(null)
         setError("Couldn’t read that file. Export the invoice as CSV and try again.")
       } finally {
         setBusy(false)
       }
     },
-    [clearReviewTimer, run],
+    [clearReviewTimer, runMapped, runSampleText],
   )
 
   const onSample = useCallback(async () => {
@@ -96,21 +146,23 @@ export default function App() {
       const res = await fetch(SAMPLE_PATH)
       if (!res.ok) throw new Error("missing sample")
       const text = await res.text()
-      run(text, true)
+      runSampleText(text)
     } catch {
       clearReviewTimer()
       setIncoming(null)
       setAnalysis(null)
+      setPending(null)
       setError("The sample invoice failed to load. Check that the app was built with the CSV in /public.")
     } finally {
       setBusy(false)
     }
-  }, [clearReviewTimer, run])
+  }, [clearReviewTimer, runSampleText])
 
   const reset = useCallback(() => {
     clearReviewTimer()
     setAnalysis(null)
     setIncoming(null)
+    setPending(null)
     setError(null)
     setScreen("findings")
   }, [clearReviewTimer])
@@ -169,6 +221,16 @@ export default function App() {
           </>
         ) : reviewing && incoming ? (
           <ReviewingView lineCount={incoming.lineCount} period={incoming.billingPeriod} />
+        ) : pending ? (
+          <ColumnMapper
+            table={pending.table}
+            initial={pending.mapping}
+            fileName={pending.fileName}
+            error={error}
+            onApply={(mapping) => runMapped(pending.table, mapping, false)}
+            onCancel={reset}
+            onSample={onSample}
+          />
         ) : (
           <EmptyState error={error} busy={busy} onFile={onFile} onSample={onSample} />
         )}

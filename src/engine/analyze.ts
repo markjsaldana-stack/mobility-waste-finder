@@ -1,4 +1,5 @@
 import { FINDING_CATEGORIES, type Analysis, type Finding, type FindingCategory, type FindingGroup, type InvoiceRow } from "./types"
+import type { FieldKey } from "./fields"
 import { formatGb, formatMoney, fromCents, toCents } from "./money"
 
 /**
@@ -54,6 +55,33 @@ export const CATEGORY_META: Record<
   },
 }
 
+export type AnalyzeOptions = {
+  sample?: boolean
+  skipped?: readonly FieldKey[]
+}
+
+export function disabledRules(skipped: readonly FieldKey[]): FindingCategory[] {
+  const skip = new Set(skipped)
+  const out: FindingCategory[] = []
+  if (skip.has("line_status")) out.push("suspended")
+  if (skip.has("assigned_employee")) out.push("unassigned")
+  if (
+    skip.has("data_used_gb") ||
+    skip.has("data_used_gb_prev1") ||
+    skip.has("data_used_gb_prev2") ||
+    skip.has("voice_minutes_used")
+  ) {
+    out.push("zero_usage")
+  }
+  if (skip.has("employee_id")) out.push("duplicate")
+  if (skip.has("international_roaming_charges")) out.push("international")
+  if (skip.has("overage_charges") || skip.has("plan_monthly_cost")) out.push("overage")
+  if (skip.has("data_allowance_gb") || skip.has("data_used_gb") || skip.has("plan_monthly_cost")) {
+    out.push("oversized")
+  }
+  return out
+}
+
 function lastDayOfPeriod(billingPeriod: string): string {
   const [year, month] = billingPeriod.split("-").map(Number)
   if (!year || !month) return billingPeriod
@@ -96,7 +124,13 @@ function finding(
  * and the recoverable number inflates — the credibility problem every ROI
  * calculator on the internet has.
  */
-export function analyze(rows: InvoiceRow[], sample = false): Analysis {
+export function analyze(rows: InvoiceRow[], sampleOrOpts: boolean | AnalyzeOptions = false): Analysis {
+  const opts: AnalyzeOptions = typeof sampleOrOpts === "boolean" ? { sample: sampleOrOpts } : sampleOrOpts
+  const sample = opts.sample ?? false
+  const skipped = opts.skipped ?? []
+  const off = new Set(disabledRules(skipped))
+  const skippedContract = skipped.includes("contract_end_date")
+
   const claimed = new Set<string>()
   const findings: Finding[] = []
 
@@ -112,131 +146,148 @@ export function analyze(rows: InvoiceRow[], sample = false): Analysis {
     findings.push(f)
   }
 
-  for (const row of rows) {
-    if (row.lineStatus === "Suspended" && toCents(row.totalMonthlyCharge) > 0) {
-      const features = formatMoney(row.featureCharges)
-      claim(
-        row,
-        finding(
-          "suspended",
+  if (!off.has("suspended")) {
+    for (const row of rows) {
+      if (row.lineStatus === "Suspended" && toCents(row.totalMonthlyCharge) > 0) {
+        const features = formatMoney(row.featureCharges)
+        claim(
           row,
-          toCents(row.totalMonthlyCharge),
-          `${formatMoney(row.totalMonthlyCharge)} still billing on a suspended line (${formatMoney(row.planMonthlyCost)} plan + ${features} features). Cancel saves ${formatMoney(row.totalMonthlyCharge * 12)}/yr.`,
-        ),
-      )
+          finding(
+            "suspended",
+            row,
+            toCents(row.totalMonthlyCharge),
+            `${formatMoney(row.totalMonthlyCharge)} still billing on a suspended line (${formatMoney(row.planMonthlyCost)} plan + ${features} features). Cancel saves ${formatMoney(row.totalMonthlyCharge * 12)}/yr.`,
+          ),
+        )
+      }
     }
   }
 
-  for (const row of rows) {
-    if (claimed.has(row.lineId)) continue
-    if (row.assignedEmployee.trim() === "") {
-      claim(
-        row,
-        finding(
-          "unassigned",
+  if (!off.has("unassigned")) {
+    for (const row of rows) {
+      if (claimed.has(row.lineId)) continue
+      if (row.assignedEmployee.trim() === "") {
+        claim(
           row,
-          toCents(row.totalMonthlyCharge),
-          `No owner of record. ${formatMoney(row.planMonthlyCost)} ${row.planName}, billed ${formatMoney(row.totalMonthlyCharge)} this period. Confirm against HR roster, then cancel — saves ${formatMoney(row.totalMonthlyCharge * 12)}/yr.`,
-        ),
-      )
+          finding(
+            "unassigned",
+            row,
+            toCents(row.totalMonthlyCharge),
+            `No owner of record. ${formatMoney(row.planMonthlyCost)} ${row.planName}, billed ${formatMoney(row.totalMonthlyCharge)} this period. Confirm against HR roster, then cancel — saves ${formatMoney(row.totalMonthlyCharge * 12)}/yr.`,
+          ),
+        )
+      }
     }
   }
 
-  for (const row of rows) {
-    if (claimed.has(row.lineId)) continue
-    if (
-      row.dataUsedGb === 0 &&
-      row.dataUsedGbPrev1 === 0 &&
-      row.dataUsedGbPrev2 === 0 &&
-      row.voiceMinutesUsed === 0
-    ) {
-      const inTerm = stillInContract(row)
-      const contractNote = inTerm
-        ? `Contract ends ${row.contractEndDate} — an ETF conversation, not a blind cancel.`
-        : `Contract ended ${row.contractEndDate}. Suspend, then cancel.`
-      claim(
-        row,
-        finding(
-          "zero_usage",
+  if (!off.has("zero_usage")) {
+    for (const row of rows) {
+      if (claimed.has(row.lineId)) continue
+      if (
+        row.dataUsedGb === 0 &&
+        row.dataUsedGbPrev1 === 0 &&
+        row.dataUsedGbPrev2 === 0 &&
+        row.voiceMinutesUsed === 0
+      ) {
+        const inTerm = skippedContract ? null : stillInContract(row)
+        const contractNote =
+          inTerm === true
+            ? `Contract ends ${row.contractEndDate} — an ETF conversation, not a blind cancel.`
+            : inTerm === false
+              ? `Contract ended ${row.contractEndDate}. Suspend, then cancel.`
+              : "Suspend, then cancel at contract end."
+        claim(
           row,
-          toCents(row.totalMonthlyCharge),
-          `0 GB and 0 minutes across three periods. ${formatMoney(row.planMonthlyCost)} ${row.planName}. ${contractNote} Saves ${formatMoney(row.totalMonthlyCharge * 12)}/yr.`,
-          { inContract: inTerm },
-        ),
-      )
+          finding(
+            "zero_usage",
+            row,
+            toCents(row.totalMonthlyCharge),
+            `0 GB and 0 minutes across three periods. ${formatMoney(row.planMonthlyCost)} ${row.planName}. ${contractNote} Saves ${formatMoney(row.totalMonthlyCharge * 12)}/yr.`,
+            { inContract: inTerm },
+          ),
+        )
+      }
     }
   }
 
-  for (const row of rows) {
-    if (claimed.has(row.lineId)) continue
-    const id = row.employeeId.trim()
-    if (id && (employeeCounts.get(id) ?? 0) > 1 && row.dataUsedGb < 2) {
-      const sibling = primarySibling(row, rows)
-      const siblingBit = sibling
-        ? `${formatGb(row.dataUsedGb)} GB this period vs. ${formatGb(sibling.dataUsedGb)} GB on ${sibling.phoneNumber}`
-        : `${formatGb(row.dataUsedGb)} GB this period`
-      const who = row.assignedEmployee || id
-      claim(
-        row,
-        finding(
-          "duplicate",
+  if (!off.has("duplicate")) {
+    for (const row of rows) {
+      if (claimed.has(row.lineId)) continue
+      const id = row.employeeId.trim()
+      if (id && (employeeCounts.get(id) ?? 0) > 1 && row.dataUsedGb < 2) {
+        const sibling = primarySibling(row, rows)
+        const siblingBit = sibling
+          ? `${formatGb(row.dataUsedGb)} GB this period vs. ${formatGb(sibling.dataUsedGb)} GB on ${sibling.phoneNumber}`
+          : `${formatGb(row.dataUsedGb)} GB this period`
+        const who = row.assignedEmployee || id
+        claim(
           row,
-          toCents(row.totalMonthlyCharge),
-          `Second line for ${who}. ${siblingBit}. ${formatMoney(row.planMonthlyCost)} plan. Consolidate saves ${formatMoney(row.totalMonthlyCharge * 12)}/yr.`,
-          { sibling },
-        ),
-      )
+          finding(
+            "duplicate",
+            row,
+            toCents(row.totalMonthlyCharge),
+            `Second line for ${who}. ${siblingBit}. ${formatMoney(row.planMonthlyCost)} plan. Consolidate saves ${formatMoney(row.totalMonthlyCharge * 12)}/yr.`,
+            { sibling },
+          ),
+        )
+      }
     }
   }
 
-  for (const row of rows) {
-    if (claimed.has(row.lineId)) continue
-    if (row.internationalRoamingCharges > 0) {
-      const save = Math.max(0, toCents(row.internationalRoamingCharges) - toCents(GLOBAL_ADDON_COST))
-      claim(
-        row,
-        finding(
-          "international",
+  if (!off.has("international")) {
+    for (const row of rows) {
+      if (claimed.has(row.lineId)) continue
+      if (row.internationalRoamingCharges > 0) {
+        const save = Math.max(0, toCents(row.internationalRoamingCharges) - toCents(GLOBAL_ADDON_COST))
+        claim(
           row,
-          save,
-          `${formatMoney(row.internationalRoamingCharges)} in day-pass charges. A global add-on is ${formatMoney(GLOBAL_ADDON_COST)}/mo. Move over, save ${formatMoney(fromCents(save))}/mo (${formatMoney(fromCents(save * 12))}/yr).`,
-        ),
-      )
+          finding(
+            "international",
+            row,
+            save,
+            `${formatMoney(row.internationalRoamingCharges)} in day-pass charges. A global add-on is ${formatMoney(GLOBAL_ADDON_COST)}/mo. Move over, save ${formatMoney(fromCents(save))}/mo (${formatMoney(fromCents(save * 12))}/yr).`,
+          ),
+        )
+      }
     }
   }
 
-  for (const row of rows) {
-    if (claimed.has(row.lineId)) continue
-    if (row.overageCharges > 0) {
-      const save = Math.max(
-        0,
-        toCents(row.planMonthlyCost) + toCents(row.overageCharges) - toCents(UNLIMITED_PLUS_COST),
-      )
-      claim(
-        row,
-        finding(
-          "overage",
+  if (!off.has("overage")) {
+    for (const row of rows) {
+      if (claimed.has(row.lineId)) continue
+      if (row.overageCharges > 0) {
+        const save = Math.max(
+          0,
+          toCents(row.planMonthlyCost) + toCents(row.overageCharges) - toCents(UNLIMITED_PLUS_COST),
+        )
+        claim(
           row,
-          save,
-          `${formatMoney(row.planMonthlyCost)} plan + ${formatMoney(row.overageCharges)} overage = ${formatMoney(row.planMonthlyCost + row.overageCharges)}. Unlimited Plus is ${formatMoney(UNLIMITED_PLUS_COST)}. Upgrade saves ${formatMoney(fromCents(save))}/mo (${formatMoney(fromCents(save * 12))}/yr).`,
-        ),
-      )
+          finding(
+            "overage",
+            row,
+            save,
+            `${formatMoney(row.planMonthlyCost)} plan + ${formatMoney(row.overageCharges)} overage = ${formatMoney(row.planMonthlyCost + row.overageCharges)}. Unlimited Plus is ${formatMoney(UNLIMITED_PLUS_COST)}. Upgrade saves ${formatMoney(fromCents(save))}/mo (${formatMoney(fromCents(save * 12))}/yr).`,
+          ),
+        )
+      }
     }
   }
 
-  for (const row of rows) {
-    if (claimed.has(row.lineId)) continue
-    if ((row.dataAllowanceGb === 999 || row.dataAllowanceGb === 15) && row.dataUsedGb < 5) {
-      const save = Math.max(0, toCents(row.planMonthlyCost) - toCents(POOLED_5GB_COST))
-      claim(
-        row,
-        finding(
-          "oversized",
+  if (!off.has("oversized")) {
+    for (const row of rows) {
+      if (claimed.has(row.lineId)) continue
+      if ((row.dataAllowanceGb === 999 || row.dataAllowanceGb === 15) && row.dataUsedGb < 5) {
+        const save = Math.max(0, toCents(row.planMonthlyCost) - toCents(POOLED_5GB_COST))
+        claim(
           row,
-          save,
-          `${formatMoney(row.planMonthlyCost)} plan, ${formatGb(row.dataUsedGb)} GB used, downgrade to ${formatMoney(POOLED_5GB_COST)}, saves ${formatMoney(fromCents(save * 12))}/yr.`,
-        ),
-      )
+          finding(
+            "oversized",
+            row,
+            save,
+            `${formatMoney(row.planMonthlyCost)} plan, ${formatGb(row.dataUsedGb)} GB used, downgrade to ${formatMoney(POOLED_5GB_COST)}, saves ${formatMoney(fromCents(save * 12))}/yr.`,
+          ),
+        )
+      }
     }
   }
 
@@ -296,5 +347,7 @@ export function analyze(rows: InvoiceRow[], sample = false): Analysis {
     billingPeriod: periods.length === 1 ? periods[0] : periods.join(", ") || "—",
     costCenterWaste,
     sample,
+    skippedFields: [...skipped],
+    skippedRules: disabledRules(skipped),
   }
 }

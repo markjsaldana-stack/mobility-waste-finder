@@ -67,6 +67,7 @@ export function FindingsView({ analysis }: Props) {
               key={group.category}
               group={group}
               expanded={open === group.category}
+              notTested={analysis.skippedRules.includes(group.category)}
               onToggle={() => setOpen(open === group.category ? null : group.category)}
             />
           ))}
@@ -81,6 +82,16 @@ export function FindingsView({ analysis }: Props) {
         </table>
       </div>
 
+      {analysis.skippedRules.length > 0 ? (
+        <p className="rule-note">
+          Not tested (no column mapped):{" "}
+          {analysis.skippedRules
+            .map((rule) => analysis.groups.find((g) => g.category === rule)?.label ?? rule)
+            .join("; ")}
+          .
+        </p>
+      ) : null}
+
       <p className="rule-note">
         A line is claimed by the first rule it matches. Categories do not overlap — which is why
         this number is smaller, and more defensible, than stacking every heuristic on the same row.
@@ -92,10 +103,12 @@ export function FindingsView({ analysis }: Props) {
 function GroupBlock({
   group,
   expanded,
+  notTested,
   onToggle,
 }: {
   group: FindingGroup
   expanded: boolean
+  notTested: boolean
   onToggle: () => void
 }) {
   const empty = group.findings.length === 0
@@ -115,13 +128,15 @@ function GroupBlock({
             </span>
             <span>
               <span className="group-label">{group.label}</span>
-              <span className="group-action">{group.action}</span>
+              <span className="group-action">
+                {notTested ? "Not tested — no column mapped for this rule." : group.action}
+              </span>
             </span>
           </button>
         </th>
-        <td className="num">{empty ? "—" : formatInt(group.findings.length)}</td>
-        <td className="num">{empty ? "—" : formatMoney(group.monthlySavings)}</td>
-        <td className="num">{empty ? "—" : formatMoney(group.annualSavings)}</td>
+        <td className="num">{notTested || empty ? "—" : formatInt(group.findings.length)}</td>
+        <td className="num">{notTested || empty ? "—" : formatMoney(group.monthlySavings)}</td>
+        <td className="num">{notTested || empty ? "—" : formatMoney(group.annualSavings)}</td>
       </tr>
       {expanded
         ? group.findings.map((item) => <LineRow key={item.row.lineId} finding={item} />)

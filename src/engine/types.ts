@@ -79,6 +79,8 @@ export type Analysis = {
   billingPeriod: string
   costCenterWaste: CostCenterWaste[]
   sample: boolean
+  skippedFields: string[]
+  skippedRules: FindingCategory[]
 }
 
 export type ParseResult =
