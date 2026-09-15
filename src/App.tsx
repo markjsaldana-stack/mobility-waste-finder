@@ -1,32 +1,73 @@
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { EmptyState } from "./EmptyState"
 import { FindingsView } from "./FindingsView"
 import { MemoView } from "./MemoView"
+import { ReviewingView } from "./ReviewingView"
 import { analyze } from "./engine/analyze"
 import { parseInvoiceCsv } from "./engine/parse"
 import type { Analysis } from "./engine/types"
 
 const SAMPLE_PATH = "/brightfin_sample_invoice_2026-08.csv"
+const REVIEW_MS = 820
 
 type Screen = "findings" | "memo"
 
+function prefersReducedMotion(): boolean {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches
+}
+
 export default function App() {
   const [analysis, setAnalysis] = useState<Analysis | null>(null)
+  const [incoming, setIncoming] = useState<Analysis | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [screen, setScreen] = useState<Screen>("findings")
+  const reviewTimer = useRef<number | null>(null)
 
-  const run = useCallback((text: string, sample: boolean) => {
-    const parsed = parseInvoiceCsv(text)
-    if (!parsed.ok) {
-      setAnalysis(null)
-      setError(parsed.error)
-      return
+  const clearReviewTimer = useCallback(() => {
+    if (reviewTimer.current != null) {
+      window.clearTimeout(reviewTimer.current)
+      reviewTimer.current = null
     }
-    setError(null)
-    setScreen("findings")
-    setAnalysis(analyze(parsed.rows, sample))
   }, [])
+
+  useEffect(() => () => clearReviewTimer(), [clearReviewTimer])
+
+  const present = useCallback(
+    (next: Analysis) => {
+      clearReviewTimer()
+      setError(null)
+      setScreen("findings")
+      if (prefersReducedMotion()) {
+        setIncoming(null)
+        setAnalysis(next)
+        return
+      }
+      setAnalysis(null)
+      setIncoming(next)
+      reviewTimer.current = window.setTimeout(() => {
+        setAnalysis(next)
+        setIncoming(null)
+        reviewTimer.current = null
+      }, REVIEW_MS)
+    },
+    [clearReviewTimer],
+  )
+
+  const run = useCallback(
+    (text: string, sample: boolean) => {
+      const parsed = parseInvoiceCsv(text)
+      if (!parsed.ok) {
+        clearReviewTimer()
+        setIncoming(null)
+        setAnalysis(null)
+        setError(parsed.error)
+        return
+      }
+      present(analyze(parsed.rows, sample))
+    },
+    [clearReviewTimer, present],
+  )
 
   const onFile = useCallback(
     async (file: File) => {
@@ -37,13 +78,15 @@ export default function App() {
         const sample = /brightfin_sample_invoice/i.test(file.name)
         run(text, sample)
       } catch {
+        clearReviewTimer()
+        setIncoming(null)
         setAnalysis(null)
         setError("Couldn’t read that file. Export the invoice as CSV and try again.")
       } finally {
         setBusy(false)
       }
     },
-    [run],
+    [clearReviewTimer, run],
   )
 
   const onSample = useCallback(async () => {
@@ -55,18 +98,25 @@ export default function App() {
       const text = await res.text()
       run(text, true)
     } catch {
+      clearReviewTimer()
+      setIncoming(null)
       setAnalysis(null)
       setError("The sample invoice failed to load. Check that the app was built with the CSV in /public.")
     } finally {
       setBusy(false)
     }
-  }, [run])
+  }, [clearReviewTimer, run])
 
   const reset = useCallback(() => {
+    clearReviewTimer()
     setAnalysis(null)
+    setIncoming(null)
     setError(null)
     setScreen("findings")
-  }, [])
+  }, [clearReviewTimer])
+
+  const ready = analysis != null
+  const reviewing = incoming != null && analysis == null
 
   return (
     <div className="desk">
@@ -82,7 +132,7 @@ export default function App() {
           </div>
         </header>
 
-        {analysis ? (
+        {ready && analysis ? (
           <>
             <nav className="view-switch no-print" aria-label="Document views">
               <div className="view-tabs">
@@ -110,13 +160,15 @@ export default function App() {
                 </button>
               </div>
             </nav>
-            <div className="screen-only" hidden={screen !== "findings"}>
+            <div className="screen-only findings-enter" hidden={screen !== "findings"}>
               <FindingsView analysis={analysis} />
             </div>
             <div className={screen === "memo" ? undefined : "memo-offscreen"}>
               <MemoView analysis={analysis} />
             </div>
           </>
+        ) : reviewing && incoming ? (
+          <ReviewingView lineCount={incoming.lineCount} period={incoming.billingPeriod} />
         ) : (
           <EmptyState error={error} busy={busy} onFile={onFile} onSample={onSample} />
         )}

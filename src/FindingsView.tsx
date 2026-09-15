@@ -134,27 +134,29 @@ function LineRow({ finding }: { finding: Finding }) {
   const { row } = finding
   const contract =
     finding.inContract === true ? "in contract" : finding.inContract === false ? "contract ended" : null
+  const meta = [row.planName, row.costCenter, row.department, row.carrier].filter(Boolean)
   return (
     <tr className="line">
       <td colSpan={4}>
         <div className="line-block">
-          <div className="line-top">
+          <div className="line-head">
             <span className="line-id">{row.lineId}</span>
             <span className="line-phone">{row.phoneNumber}</span>
             <span className="line-who">
               {row.assignedEmployee || "Unassigned"}
               {row.employeeId ? ` · ${row.employeeId}` : ""}
             </span>
-            <span className="num">{formatMoney(finding.monthlySavings)}/mo</span>
-            <span className="num">{formatMoney(finding.annualSavings)}/yr</span>
+            <span className="line-save">
+              <span className="num">{formatMoney(finding.monthlySavings)}/mo</span>
+              <span className="num">{formatMoney(finding.annualSavings)}/yr</span>
+            </span>
           </div>
-          <p className="line-mid">
-            {row.planName}
-            {row.costCenter ? ` · ${row.costCenter}` : ""}
-            {row.department ? ` ${row.department}` : ""}
-            {row.carrier ? ` · ${row.carrier}` : ""}
-            {contract ? ` · ${contract}` : ""}
-          </p>
+          {meta.length > 0 || contract ? (
+            <p className="line-mid">
+              {meta.join(" · ")}
+              {contract ? <span className="line-contract">{contract}</span> : null}
+            </p>
+          ) : null}
           <p className="line-math">{finding.math}</p>
         </div>
       </td>
