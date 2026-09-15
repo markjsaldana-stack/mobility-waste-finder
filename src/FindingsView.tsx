@@ -29,15 +29,15 @@ export function FindingsView({ analysis }: Props) {
             <dt>Period</dt>
             <dd>{formatPeriod(analysis.billingPeriod)}</dd>
           </div>
-          <div>
+          <div className="num">
             <dt>Lines analyzed</dt>
             <dd>{formatInt(analysis.lineCount)}</dd>
           </div>
-          <div>
+          <div className="num">
             <dt>Lines flagged</dt>
             <dd>{formatInt(analysis.flaggedLineCount)}</dd>
           </div>
-          <div>
+          <div className="num">
             <dt>Recoverable / mo</dt>
             <dd>{formatMoney(analysis.recoverableMonthly)}</dd>
           </div>
