@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react"
+import { BookCta } from "./BookCta"
 import { ColumnMapper } from "./ColumnMapper"
 import { EmptyState } from "./EmptyState"
 import { FindingsView } from "./FindingsView"
@@ -218,6 +219,7 @@ export default function App() {
             <div className={screen === "memo" ? undefined : "memo-offscreen"}>
               <MemoView analysis={analysis} />
             </div>
+            <BookCta />
           </>
         ) : reviewing && incoming ? (
           <ReviewingView lineCount={incoming.lineCount} period={incoming.billingPeriod} />
