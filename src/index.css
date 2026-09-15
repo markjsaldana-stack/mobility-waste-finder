@@ -224,7 +224,7 @@ button:focus-visible,
 
 .book-cta-btn {
   margin-top: 0.8rem;
-  min-width: 16.5rem;
+  min-width: min(16.5rem, 100%);
   background: var(--accent-deep);
   color: #fff;
   padding: 0.72rem 1.4rem 0.74rem;
