@@ -5,9 +5,11 @@ import { formatInt, formatPct, formatPeriod } from "./format"
 
 type Props = {
   analysis: Analysis
+  onUpload?: (file: File) => void
+  uploadBusy?: boolean
 }
 
-export function MemoView({ analysis }: Props) {
+export function MemoView({ analysis, onUpload, uploadBusy }: Props) {
   const period = formatPeriod(analysis.billingPeriod)
 
   return (
@@ -53,7 +55,7 @@ export function MemoView({ analysis }: Props) {
           {formatMoney(analysis.recoverableMonthly)} per month · {formatPct(analysis.reductionPct)} of
           current wireless spend
         </p>
-        <BookCta />
+        <BookCta sample={analysis.sample} onUpload={onUpload} uploadBusy={uploadBusy} />
       </section>
 
       <table className="memo-table">

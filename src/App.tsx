@@ -203,16 +203,13 @@ export default function App() {
                 <button type="button" className="text-btn" onClick={() => window.print()}>
                   Print memo
                 </button>
-                <button type="button" className="text-btn" onClick={reset}>
-                  Analyze another file
-                </button>
               </div>
             </nav>
             <div className="screen-only findings-enter" hidden={screen !== "findings"}>
-              <FindingsView analysis={analysis} />
+              <FindingsView analysis={analysis} onUpload={onFile} uploadBusy={busy} />
             </div>
             <div className={screen === "memo" ? undefined : "memo-offscreen"}>
-              <MemoView analysis={analysis} />
+              <MemoView analysis={analysis} onUpload={onFile} uploadBusy={busy} />
             </div>
           </>
         ) : reviewing && incoming ? (

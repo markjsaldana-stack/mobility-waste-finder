@@ -1,13 +1,20 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from "react"
 import { submitLead } from "./hubspot"
 
-export function BookCta() {
+type Props = {
+  sample?: boolean
+  onUpload?: (file: File) => void
+  uploadBusy?: boolean
+}
+
+export function BookCta({ sample = false, onUpload, uploadBusy = false }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const titleId = useId()
   const emailId = useId()
   const firstId = useId()
   const lastId = useId()
   const companyId = useId()
+  const fileId = useId()
   const [email, setEmail] = useState("")
   const [firstname, setFirstname] = useState("")
   const [lastname, setLastname] = useState("")
@@ -65,6 +72,25 @@ export function BookCta() {
       <button type="button" className="book-cta-btn" aria-haspopup="dialog" onClick={open}>
         Book a time with Brightfin
       </button>
+      {sample && onUpload ? (
+        <p className="book-cta-alt">
+          <label htmlFor={fileId} className={uploadBusy ? "text-btn is-disabled" : "text-btn"}>
+            Or upload your own spreadsheet
+          </label>
+          <input
+            id={fileId}
+            type="file"
+            accept=".csv,text/csv"
+            className="sr-only"
+            disabled={uploadBusy}
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) onUpload(file)
+              e.currentTarget.value = ""
+            }}
+          />
+        </p>
+      ) : null}
 
       <dialog
         ref={dialogRef}

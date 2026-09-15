@@ -6,9 +6,11 @@ import { formatInt, formatPct, formatPeriod } from "./format"
 
 type Props = {
   analysis: Analysis
+  onUpload?: (file: File) => void
+  uploadBusy?: boolean
 }
 
-export function FindingsView({ analysis }: Props) {
+export function FindingsView({ analysis, onUpload, uploadBusy }: Props) {
   const [open, setOpen] = useState<string | null>(null)
 
   return (
@@ -25,7 +27,7 @@ export function FindingsView({ analysis }: Props) {
           {formatMoney(analysis.annualizedSpend)} annualized · {formatPct(analysis.reductionPct)} of
           spend
         </p>
-        <BookCta />
+        <BookCta sample={analysis.sample} onUpload={onUpload} uploadBusy={uploadBusy} />
         <dl className="headline-meta">
           <div>
             <dt>Period</dt>

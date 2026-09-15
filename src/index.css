@@ -239,6 +239,20 @@ button:focus-visible,
   background: #056892;
 }
 
+.book-cta-alt {
+  margin-top: 0.7rem;
+  font-size: 0.82rem;
+}
+
+.book-cta-alt .text-btn {
+  cursor: pointer;
+}
+
+.text-btn.is-disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
 .book-dialog {
   width: min(24.75rem, calc(100vw - 2rem));
   max-width: 100%;
