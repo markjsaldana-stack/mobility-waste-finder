@@ -526,6 +526,7 @@ button:focus-visible,
 
 .headline {
   margin-bottom: 1.85rem;
+  text-align: center;
 }
 
 .headline-kicker {
@@ -550,7 +551,6 @@ button:focus-visible,
 .headline-sub {
   font-size: 0.86rem;
   color: var(--ink-muted);
-  max-width: 38rem;
 }
 
 .findings {
@@ -559,26 +559,25 @@ button:focus-visible,
 
 .headline-meta {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--num-col) var(--num-col) var(--num-col);
-  gap: 0;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem 1rem;
   margin-top: 1.35rem;
   padding-top: 1rem;
   border-top: 1px solid var(--rule);
+  justify-items: center;
 }
 
 .headline-meta > div {
   min-width: 0;
-  padding-right: 0.55rem;
+  width: 100%;
 }
 
 .headline-meta dt,
-.headline-meta dd {
-  text-align: left;
-}
-
+.headline-meta dd,
+.headline-meta .num,
 .headline-meta .num dt,
 .headline-meta .num dd {
-  text-align: right;
+  text-align: center;
 }
 
 .headline-meta dt {
@@ -1038,7 +1037,7 @@ button:focus-visible,
 
   .headline-meta .num dt,
   .headline-meta .num dd {
-    text-align: left;
+    text-align: center;
   }
 
   .ledger-wrap {
