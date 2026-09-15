@@ -75,4 +75,4 @@ npx vercel dist
 
 Or connect the repo to Vercel and use the default Vite preset.
 
-The **Book a time with Brightfin** button posts first name, last name, email, and company to a HubSpot form. The invoice still never leaves the browser. Override the form with `VITE_HUBSPOT_PORTAL_ID` and `VITE_HUBSPOT_FORM_ID` if you swap forms; the defaults match [this Brightfin form](https://uyx07.share.hsforms.com/27I4_-THxSVer-iJttDDHug).
+The **Book a time with Brightfin** button embeds the HubSpot form in the page, so conditional fields (company, employees, industry, and whatever else is configured in HubSpot) appear as HubSpot intended. The invoice still never leaves the browser. Override the form with `VITE_HUBSPOT_PORTAL_ID` and `VITE_HUBSPOT_FORM_ID` if you swap forms; the defaults match [this Brightfin form](https://uyx07.share.hsforms.com/27I4_-THxSVer-iJttDDHug).
