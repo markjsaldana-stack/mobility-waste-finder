@@ -223,7 +223,7 @@ export default function App() {
             initial={pending.mapping}
             fileName={pending.fileName}
             error={error}
-            onApply={(mapping) => runMapped(pending.table, mapping, false)}
+            onApply={(mapping, mappedTable) => runMapped(mappedTable, mapping, false)}
             onCancel={reset}
             onSample={onSample}
           />

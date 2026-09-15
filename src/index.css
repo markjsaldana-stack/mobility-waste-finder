@@ -838,6 +838,33 @@ button:focus-visible,
   line-height: 1.45;
 }
 
+.mapper-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.75rem;
+  margin: 0 0 1.15rem;
+  font-size: 0.82rem;
+}
+
+.mapper-header-row > span:first-child {
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.mapper-header-row .mapper-select {
+  max-width: 28rem;
+}
+
+.mapper-header-note {
+  flex: 1 1 12rem;
+  font-size: 0.76rem;
+  color: var(--ink-muted);
+}
+
 .mapper-actions {
   display: flex;
   flex-wrap: wrap;

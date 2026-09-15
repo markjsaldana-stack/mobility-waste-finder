@@ -96,3 +96,57 @@ export function unusedHeaders(headers: string[], mapping: ColumnMapping): string
   const used = new Set(Object.values(mapping).filter(Boolean))
   return headers.filter((h) => !used.has(h))
 }
+
+function looksLikeDataCell(cell: string): boolean {
+  const t = cell.trim()
+  if (/^\$?-?\d[\d,]*(\.\d+)?$/.test(t)) return true
+  if (/^\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/.test(t)) return true
+  if (/^INV[-_]/i.test(t)) return true
+  if (/^E\d{3,}$/i.test(t)) return true
+  if (/^CC-\d+/i.test(t)) return true
+  return false
+}
+
+/** How many cells in a row look like known invoice column names. */
+export function headerMatchCount(cells: string[]): number {
+  let n = 0
+  for (const cell of cells) {
+    if (!cell.trim()) continue
+    if (FIELD_META.some((field) => scoreHeader(cell, field) >= 70)) n++
+  }
+  return n
+}
+
+/**
+ * Find the first row that looks like column headers. Title rows and
+ * “Account: / Billing Period:” banners score too low to win.
+ */
+export function detectHeaderRow(rows: string[][]): number {
+  let bestIdx = 0
+  let best = -1
+  const limit = Math.min(rows.length, 50)
+  for (let i = 0; i < limit; i++) {
+    const row = rows[i] ?? []
+    const cells = row.map((c) => String(c ?? "").trim()).filter(Boolean)
+    if (cells.length < 3) continue
+    const remaining = rows.slice(i + 1).filter((r) => r.some((c) => String(c ?? "").trim()))
+    if (remaining.length === 0) continue
+    const hits = headerMatchCount(cells)
+    const dataRatio = cells.filter(looksLikeDataCell).length / cells.length
+    let score = hits * 12 + Math.min(cells.length, 24)
+    if (dataRatio > 0.35) score *= 0.15
+    if (hits < 3) score *= 0.35
+    if (score > best) {
+      best = score
+      bestIdx = i
+    }
+  }
+  return bestIdx
+}
+
+export function headerRowPreview(row: string[], max = 4): string {
+  const cells = row.map((c) => String(c ?? "").trim()).filter(Boolean)
+  if (cells.length === 0) return "(empty)"
+  const shown = cells.slice(0, max).join(", ")
+  return cells.length > max ? `${shown}…` : shown
+}
