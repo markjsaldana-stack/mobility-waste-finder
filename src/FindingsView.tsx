@@ -25,7 +25,7 @@ export function FindingsView({ analysis }: Props) {
           {formatMoney(analysis.annualizedSpend)} annualized · {formatPct(analysis.reductionPct)} of
           spend
         </p>
-        <BookCta picker />
+        <BookCta />
         <dl className="headline-meta">
           <div>
             <dt>Period</dt>
