@@ -12,8 +12,11 @@ export function MemoView({ analysis }: Props) {
   return (
     <article className="memo-page">
       <header className="memo-letterhead">
-        <p className="memo-mark">Mobility Waste Finding</p>
-        <p className="memo-exhibit">Exhibit A · Invoice analysis</p>
+        <div>
+          <p className="memo-mark">Mobility Waste Finding</p>
+          <p className="memo-firm">Prepared from the attached carrier invoice</p>
+        </div>
+        <p className="memo-exhibit">Exhibit A</p>
       </header>
 
       <dl className="memo-header">
@@ -73,7 +76,7 @@ export function MemoView({ analysis }: Props) {
                 <td>{g.label}</td>
                 <td className="num">{formatInt(g.findings.length)}</td>
                 <td className="num">{formatMoney(g.annualSavings)}</td>
-                <td>{g.action}</td>
+                <td className="memo-action">{g.action}</td>
               </tr>
             ))}
         </tbody>
@@ -104,7 +107,7 @@ export function MemoView({ analysis }: Props) {
         <tbody>
           {analysis.costCenterWaste.map((cc) => (
             <tr key={cc.costCenter}>
-              <td>{cc.costCenter}</td>
+              <td className="mono-id">{cc.costCenter}</td>
               <td>{cc.department}</td>
               <td className="num">{formatInt(cc.lineCount)}</td>
               <td className="num">{formatMoney(cc.annualSavings)}</td>
@@ -116,8 +119,8 @@ export function MemoView({ analysis }: Props) {
       <p className="memo-limits">
         This analysis is limited to what a single-period invoice can prove. It cannot see full
         contract terms or ETFs, pooled-plan true-up across lines, devices out of warranty, or
-        anything on cloud or SaaS. Those questions need the invoice, the contract, and the HR
-        roster in the same place — which is the work this finding is meant to start, not finish.
+        anything on cloud or SaaS. Those questions need the invoice, the contract, and the HR roster
+        in the same place — which is the work this finding is meant to start, not finish.
       </p>
     </article>
   )

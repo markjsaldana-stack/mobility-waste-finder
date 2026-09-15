@@ -69,50 +69,62 @@ export default function App() {
   }, [])
 
   return (
-    <div className="page">
-      <header className="masthead no-print">
-        <div className="masthead-left">
-          <p className="wordmark">Mobility Waste Finder</p>
-          <p className="masthead-sub">A findings document, not a dashboard.</p>
-        </div>
-        <p className="masthead-privacy">Your file never leaves your browser.</p>
-      </header>
+    <div className="desk">
+      <div className="page">
+        <header className="masthead no-print">
+          <div className="masthead-left">
+            <p className="wordmark">Mobility Waste Finder</p>
+            <p className="masthead-sub">A findings document, not a dashboard.</p>
+          </div>
+          <div className="masthead-right">
+            <p className="masthead-stamp">Confidential · in-browser</p>
+            <p className="masthead-privacy">Your file never leaves your browser.</p>
+          </div>
+        </header>
 
-      {analysis ? (
-        <>
-          <nav className="view-switch no-print" aria-label="Document views">
-            <button
-              type="button"
-              className={screen === "findings" ? "is-active" : undefined}
-              onClick={() => setScreen("findings")}
-            >
-              Findings
-            </button>
-            <button
-              type="button"
-              className={screen === "memo" ? "is-active" : undefined}
-              onClick={() => setScreen("memo")}
-            >
-              Memo to Finance
-            </button>
-            <span className="view-spacer" />
-            <button type="button" className="text-btn" onClick={() => window.print()}>
-              Print memo
-            </button>
-            <button type="button" className="text-btn" onClick={reset}>
-              Analyze another file
-            </button>
-          </nav>
-          <div className="screen-only" hidden={screen !== "findings"}>
-            <FindingsView analysis={analysis} />
-          </div>
-          <div className={screen === "memo" ? undefined : "memo-offscreen"}>
-            <MemoView analysis={analysis} />
-          </div>
-        </>
-      ) : (
-        <EmptyState error={error} busy={busy} onFile={onFile} onSample={onSample} />
-      )}
+        {analysis ? (
+          <>
+            <nav className="view-switch no-print" aria-label="Document views">
+              <div className="view-tabs">
+                <button
+                  type="button"
+                  className={screen === "findings" ? "is-active" : undefined}
+                  onClick={() => setScreen("findings")}
+                >
+                  Findings
+                </button>
+                <button
+                  type="button"
+                  className={screen === "memo" ? "is-active" : undefined}
+                  onClick={() => setScreen("memo")}
+                >
+                  Memo to Finance
+                </button>
+              </div>
+              <div className="view-actions">
+                <button type="button" className="text-btn" onClick={() => window.print()}>
+                  Print memo
+                </button>
+                <button type="button" className="text-btn" onClick={reset}>
+                  Analyze another file
+                </button>
+              </div>
+            </nav>
+            <div className="screen-only" hidden={screen !== "findings"}>
+              <FindingsView analysis={analysis} />
+            </div>
+            <div className={screen === "memo" ? undefined : "memo-offscreen"}>
+              <MemoView analysis={analysis} />
+            </div>
+          </>
+        ) : (
+          <EmptyState error={error} busy={busy} onFile={onFile} onSample={onSample} />
+        )}
+
+        <footer className="colophon no-print">
+          <p>Parsed on this page. The invoice is never uploaded.</p>
+        </footer>
+      </div>
     </div>
   )
 }

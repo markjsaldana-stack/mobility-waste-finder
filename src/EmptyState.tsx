@@ -21,9 +21,10 @@ export function EmptyState({ error, busy, onFile, onSample }: Props) {
 
   return (
     <main className="empty">
+      <p className="empty-kicker">Carrier invoice export</p>
       <p className="empty-lead">
-        Drop a carrier invoice export. You get the lines that are wasting money, what to do
-        about each one, and a one-page memo for Finance.
+        Drop the file. You get the lines that are wasting money, what to do about each one, and a
+        one-page memo for Finance.
       </p>
 
       <label
@@ -44,6 +45,10 @@ export function EmptyState({ error, busy, onFile, onSample }: Props) {
           takeFiles(e.dataTransfer.files)
         }}
       >
+        <span className="crop crop-tl" aria-hidden="true" />
+        <span className="crop crop-tr" aria-hidden="true" />
+        <span className="crop crop-bl" aria-hidden="true" />
+        <span className="crop crop-br" aria-hidden="true" />
         <input
           id={inputId}
           type="file"
@@ -55,9 +60,9 @@ export function EmptyState({ error, busy, onFile, onSample }: Props) {
             e.currentTarget.value = ""
           }}
         />
-        <span className="dropzone-kicker">CSV · one billing period</span>
-        <span className="dropzone-title">{busy ? "Reading invoice…" : "Drop the export here"}</span>
-        <span className="dropzone-sub">or click to choose a file</span>
+        <span className="dropzone-kicker">Schedule A · CSV · one billing period</span>
+        <span className="dropzone-title">{busy ? "Reading invoice…" : "Attach the export"}</span>
+        <span className="dropzone-sub">Drop the file here, or click to choose one</span>
       </label>
 
       <p className="empty-sample">
@@ -75,8 +80,6 @@ export function EmptyState({ error, busy, onFile, onSample }: Props) {
           {error}
         </p>
       ) : null}
-
-      <p className="privacy">Your file never leaves your browser.</p>
     </main>
   )
 }

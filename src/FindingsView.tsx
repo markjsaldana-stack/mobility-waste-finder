@@ -20,8 +20,9 @@ export function FindingsView({ analysis }: Props) {
         <p className="headline-kicker">Recoverable annual spend</p>
         <p className="headline-number">{formatMoney(analysis.recoverableAnnual)}</p>
         <p className="headline-sub">
-          {formatMoney(analysis.totalMonthlySpend)} analyzed · {formatMoney(analysis.annualizedSpend)}{" "}
-          annualized · {formatPct(analysis.reductionPct)} of spend
+          {formatMoney(analysis.totalMonthlySpend)} analyzed this period ·{" "}
+          {formatMoney(analysis.annualizedSpend)} annualized · {formatPct(analysis.reductionPct)} of
+          spend
         </p>
         <dl className="headline-meta">
           <div>
@@ -44,45 +45,45 @@ export function FindingsView({ analysis }: Props) {
       </section>
 
       <div className="ledger-wrap">
-      <table className="ledger">
-        <caption className="sr-only">Findings by category</caption>
-        <thead>
-          <tr>
-            <th scope="col">Finding</th>
-            <th scope="col" className="num">
-              Lines
-            </th>
-            <th scope="col" className="num">
-              Monthly
-            </th>
-            <th scope="col" className="num">
-              Annual
-            </th>
-          </tr>
-        </thead>
-        {analysis.groups.map((group) => (
-          <GroupBlock
-            key={group.category}
-            group={group}
-            expanded={open === group.category}
-            onToggle={() => setOpen(open === group.category ? null : group.category)}
-          />
-        ))}
-        <tfoot>
-          <tr>
-            <th scope="row">Total recoverable</th>
-            <td className="num">{formatInt(analysis.flaggedLineCount)}</td>
-            <td className="num">{formatMoney(analysis.recoverableMonthly)}</td>
-            <td className="num">{formatMoney(analysis.recoverableAnnual)}</td>
-          </tr>
-        </tfoot>
-      </table>
+        <p className="schedule-label">Schedule 1 — Findings by category</p>
+        <table className="ledger">
+          <caption className="sr-only">Findings by category</caption>
+          <thead>
+            <tr>
+              <th scope="col">Finding</th>
+              <th scope="col" className="num">
+                Lines
+              </th>
+              <th scope="col" className="num">
+                Monthly
+              </th>
+              <th scope="col" className="num">
+                Annual
+              </th>
+            </tr>
+          </thead>
+          {analysis.groups.map((group) => (
+            <GroupBlock
+              key={group.category}
+              group={group}
+              expanded={open === group.category}
+              onToggle={() => setOpen(open === group.category ? null : group.category)}
+            />
+          ))}
+          <tfoot>
+            <tr>
+              <th scope="row">Total recoverable</th>
+              <td className="num">{formatInt(analysis.flaggedLineCount)}</td>
+              <td className="num">{formatMoney(analysis.recoverableMonthly)}</td>
+              <td className="num">{formatMoney(analysis.recoverableAnnual)}</td>
+            </tr>
+          </tfoot>
+        </table>
       </div>
 
       <p className="rule-note">
         A line is claimed by the first rule it matches. Categories do not overlap — which is why
-        this number is smaller, and more defensible, than stacking every heuristic on the same
-        row.
+        this number is smaller, and more defensible, than stacking every heuristic on the same row.
       </p>
     </div>
   )
@@ -131,30 +132,31 @@ function GroupBlock({
 
 function LineRow({ finding }: { finding: Finding }) {
   const { row } = finding
+  const contract =
+    finding.inContract === true ? "in contract" : finding.inContract === false ? "contract ended" : null
   return (
     <tr className="line">
       <td colSpan={4}>
-        <div className="line-grid">
-          <span className="line-id">{row.lineId}</span>
-          <span className="line-phone">{row.phoneNumber}</span>
-          <span className="line-who">
-            {row.assignedEmployee || "Unassigned"}
-            {row.employeeId ? ` · ${row.employeeId}` : ""}
-          </span>
-          <span className="line-cc">
-            {row.costCenter}
-            {row.department ? ` · ${row.department}` : ""}
-          </span>
-          <span className="line-plan">
-            {row.planName}
-            {finding.inContract === true ? " · in contract" : finding.inContract === false ? " · contract ended" : ""}
-          </span>
-          <span className="line-save">
+        <div className="line-block">
+          <div className="line-top">
+            <span className="line-id">{row.lineId}</span>
+            <span className="line-phone">{row.phoneNumber}</span>
+            <span className="line-who">
+              {row.assignedEmployee || "Unassigned"}
+              {row.employeeId ? ` · ${row.employeeId}` : ""}
+            </span>
             <span className="num">{formatMoney(finding.monthlySavings)}/mo</span>
             <span className="num">{formatMoney(finding.annualSavings)}/yr</span>
-          </span>
+          </div>
+          <p className="line-mid">
+            {row.planName}
+            {row.costCenter ? ` · ${row.costCenter}` : ""}
+            {row.department ? ` ${row.department}` : ""}
+            {row.carrier ? ` · ${row.carrier}` : ""}
+            {contract ? ` · ${contract}` : ""}
+          </p>
+          <p className="line-math">{finding.math}</p>
         </div>
-        <p className="line-math">{finding.math}</p>
       </td>
     </tr>
   )
