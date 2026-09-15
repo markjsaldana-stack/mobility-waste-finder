@@ -273,8 +273,67 @@ button:focus-visible,
   letter-spacing: -0.015em;
 }
 
+.book-dialog-note {
+  margin-top: 0.4rem;
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  line-height: 1.4;
+}
+
+.book-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  text-align: left;
+}
+
+.book-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+}
+
+.book-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.book-form input {
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink);
+  padding: 0.42rem 0.5rem;
+  border: 1px solid var(--rule-strong);
+  background: var(--sheet);
+  width: 100%;
+}
+
+.book-form-submit {
+  margin-top: 0.35rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.book-form-error {
+  font-size: 0.82rem;
+  color: #8a1f1f;
+  line-height: 1.35;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+
 .book-dialog-close {
-  margin-top: 1.1rem;
+  margin-top: 0.15rem;
   color: var(--accent-deep);
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -1045,6 +1104,10 @@ button:focus-visible,
   .view-switch {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .book-form-row {
+    grid-template-columns: 1fr;
   }
 
   .memo-header div {

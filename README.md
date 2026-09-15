@@ -73,4 +73,6 @@ npm run build
 npx vercel dist
 ```
 
-Or connect the repo to Vercel and use the default Vite preset. No environment variables.
+Or connect the repo to Vercel and use the default Vite preset.
+
+The **Book a time with Brightfin** button posts first name, last name, email, and company to a HubSpot form. The invoice still never leaves the browser. Override the form with `VITE_HUBSPOT_PORTAL_ID` and `VITE_HUBSPOT_FORM_ID` if you swap forms; the defaults match [this Brightfin form](https://uyx07.share.hsforms.com/27I4_-THxSVer-iJttDDHug).
