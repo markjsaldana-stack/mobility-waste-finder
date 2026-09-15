@@ -203,33 +203,58 @@ button:focus-visible,
 }
 
 .book-cta {
-  margin-top: 2.15rem;
-  padding-top: 1.35rem;
-  border-top: 1px solid var(--ink);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin: 1.15rem 0 0.1rem;
+  padding: 1.05rem 0.5rem 0.2rem;
+}
+
+.cta-picker {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.15rem 0.85rem;
+  margin-top: 0.95rem;
+  margin-bottom: 0;
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.cta-picker button {
+  padding-bottom: 0.15rem;
+  border-bottom: 1px solid transparent;
+}
+
+.cta-picker button.is-active {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+}
+
+.cta-picker button:hover {
+  color: var(--ink);
 }
 
 .book-cta-lead {
   font-family: var(--serif);
-  font-size: 1.22rem;
+  font-size: 1.18rem;
   font-weight: 500;
   letter-spacing: -0.02em;
   line-height: 1.3;
-}
-
-.book-cta-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.45rem 0.55rem;
-  margin-top: 0.7rem;
-  font-size: 0.95rem;
+  max-width: 28rem;
 }
 
 .book-cta-btn {
+  margin-top: 0.8rem;
   background: var(--accent-deep);
   color: #fff;
-  padding: 0.4rem 0.95rem 0.42rem;
-  font-weight: 500;
+  padding: 0.72rem 1.4rem 0.74rem;
+  font-size: 0.95rem;
+  font-weight: 600;
   letter-spacing: 0.01em;
   print-color-adjust: exact;
   -webkit-print-color-adjust: exact;
@@ -237,6 +262,25 @@ button:focus-visible,
 
 .book-cta-btn:hover {
   background: #056892;
+}
+
+.book-cta.is-cyan .book-cta-btn {
+  background: var(--accent);
+}
+
+.book-cta.is-cyan .book-cta-btn:hover {
+  background: #1b96c9;
+}
+
+.book-cta.is-band {
+  margin-top: 1.2rem;
+  padding: 1.2rem 1.1rem 1.2rem;
+  background: var(--paper);
+  border-top: 3px solid var(--accent);
+}
+
+.book-cta.is-band .book-cta-btn {
+  min-width: 16.5rem;
 }
 
 .book-dialog {

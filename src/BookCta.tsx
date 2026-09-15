@@ -1,8 +1,21 @@
-import { useEffect, useId, useRef } from "react"
+import { useEffect, useId, useRef, useState } from "react"
 
-export function BookCta() {
+const TREATMENTS = [
+  { id: "solid", label: "Solid" },
+  { id: "cyan", label: "Cyan" },
+  { id: "band", label: "Band" },
+] as const
+
+type Treatment = (typeof TREATMENTS)[number]["id"]
+
+type Props = {
+  picker?: boolean
+}
+
+export function BookCta({ picker = false }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const copyId = useId()
+  const [treatment, setTreatment] = useState<Treatment>("solid")
 
   useEffect(() => {
     const el = dialogRef.current
@@ -18,14 +31,27 @@ export function BookCta() {
   }
 
   return (
-    <aside className="book-cta no-print">
+    <aside className={`book-cta is-${treatment} no-print`}>
       <p className="book-cta-lead">Ready to see clearly and spend better?</p>
-      <p className="book-cta-row">
-        <span>Book a time with</span>
-        <button type="button" className="book-cta-btn" aria-haspopup="dialog" onClick={open}>
-          Brightfin
-        </button>
-      </p>
+      <button type="button" className="book-cta-btn" aria-haspopup="dialog" onClick={open}>
+        Book a time with Brightfin
+      </button>
+      {picker ? (
+        <div className="cta-picker" role="tablist" aria-label="CTA treatments">
+          {TREATMENTS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              aria-selected={treatment === item.id}
+              className={treatment === item.id ? "is-active" : undefined}
+              onClick={() => setTreatment(item.id)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       <dialog
         ref={dialogRef}

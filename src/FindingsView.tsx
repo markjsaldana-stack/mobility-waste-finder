@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { BookCta } from "./BookCta"
 import type { Analysis, Finding, FindingGroup } from "./engine/types"
 import { formatMoney } from "./engine/money"
 import { formatInt, formatPct, formatPeriod } from "./format"
@@ -24,6 +25,7 @@ export function FindingsView({ analysis }: Props) {
           {formatMoney(analysis.annualizedSpend)} annualized · {formatPct(analysis.reductionPct)} of
           spend
         </p>
+        <BookCta picker />
         <dl className="headline-meta">
           <div>
             <dt>Period</dt>
