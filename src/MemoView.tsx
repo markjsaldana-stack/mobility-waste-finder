@@ -1,3 +1,4 @@
+import { BookCta } from "./BookCta"
 import type { Analysis } from "./engine/types"
 import { formatMoney } from "./engine/money"
 import { formatInt, formatPct, formatPeriod } from "./format"
@@ -52,6 +53,7 @@ export function MemoView({ analysis }: Props) {
           {formatMoney(analysis.recoverableMonthly)} per month · {formatPct(analysis.reductionPct)} of
           current wireless spend
         </p>
+        <BookCta />
       </section>
 
       <table className="memo-table">
