@@ -62,16 +62,3 @@ export function loadHubSpotForms(): Promise<void> {
   })
   return loading
 }
-
-export function mountHubSpotForm(targetId: string): HTMLElement | null {
-  const node = document.getElementById(targetId)
-  if (!node) return null
-  node.replaceChildren()
-  const frame = document.createElement("div")
-  const attrs = hubSpotFrameAttributes(crypto.randomUUID())
-  for (const [name, value] of Object.entries(attrs)) {
-    frame.setAttribute(name, value)
-  }
-  node.appendChild(frame)
-  return frame
-}

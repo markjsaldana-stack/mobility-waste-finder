@@ -1,5 +1,10 @@
 import { useEffect, useId, useRef, useState } from "react"
-import { loadHubSpotForms, mountHubSpotForm } from "./hubspot"
+import {
+  HUBSPOT_FORM_ID,
+  HUBSPOT_PORTAL_ID,
+  HUBSPOT_REGION,
+  loadHubSpotForms,
+} from "./hubspot"
 
 type Props = {
   sample?: boolean
@@ -9,10 +14,12 @@ type Props = {
 
 export function BookCta({ sample = false, onUpload, uploadBusy = false }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const openRef = useRef(false)
   const titleId = useId()
   const fileId = useId()
-  const formMountId = `hs-form-${useId().replaceAll(":", "")}`
   const [open, setOpen] = useState(false)
+  const [instanceId, setInstanceId] = useState("")
+  const [scriptReady, setScriptReady] = useState(false)
   const [formReady, setFormReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -23,50 +30,34 @@ export function BookCta({ sample = false, onUpload, uploadBusy = false }: Props)
 
   useEffect(() => {
     if (!open) return
-    let cancelled = false
-
-    const markReady = () => {
-      if (!cancelled) setFormReady(true)
-    }
+    const markReady = () => setFormReady(true)
     window.addEventListener("hs-form-event:on-ready", markReady)
+    return () => window.removeEventListener("hs-form-event:on-ready", markReady)
+  }, [open])
 
-    const node = document.getElementById(formMountId)
-    const observer = node
-      ? new MutationObserver(() => {
-          if (node.querySelector("iframe")) markReady()
-        })
-      : null
-    if (node && observer) observer.observe(node, { childList: true, subtree: true })
-
+  const show = () => {
+    openRef.current = true
+    setError(null)
+    setFormReady(false)
+    setScriptReady(false)
+    setInstanceId(crypto.randomUUID())
+    setOpen(true)
+    dialogRef.current?.showModal()
     loadHubSpotForms()
       .then(() => {
-        if (cancelled) return
-        mountHubSpotForm(formMountId)
+        if (openRef.current) setScriptReady(true)
       })
       .catch((err: unknown) => {
-        if (!cancelled) {
+        if (openRef.current) {
           setError(err instanceof Error ? err.message : "Couldn’t load the booking form.")
         }
       })
-
-    return () => {
-      cancelled = true
-      window.removeEventListener("hs-form-event:on-ready", markReady)
-      observer?.disconnect()
-      const mount = document.getElementById(formMountId)
-      if (mount) mount.replaceChildren()
-    }
-  }, [open, formMountId])
-
-  const show = () => {
-    setError(null)
-    setFormReady(false)
-    setOpen(true)
-    dialogRef.current?.showModal()
   }
 
   const close = () => {
+    openRef.current = false
     setOpen(false)
+    setScriptReady(false)
     dialogRef.current?.close()
   }
 
@@ -100,7 +91,11 @@ export function BookCta({ sample = false, onUpload, uploadBusy = false }: Props)
         ref={dialogRef}
         className="book-dialog"
         aria-labelledby={titleId}
-        onClose={() => setOpen(false)}
+        onClose={() => {
+          openRef.current = false
+          setOpen(false)
+          setScriptReady(false)
+        }}
         onClick={(e) => {
           if (e.target === e.currentTarget) close()
         }}
@@ -114,7 +109,15 @@ export function BookCta({ sample = false, onUpload, uploadBusy = false }: Props)
             information is saved or stored.
           </p>
           {!error && !formReady ? <p className="book-hs-loading">Loading the booking form…</p> : null}
-          <div id={formMountId} className="book-hs-mount" hidden={Boolean(error)} />
+          {scriptReady && instanceId && !error ? (
+            <div
+              className="hs-form-frame book-hs-mount"
+              data-region={HUBSPOT_REGION}
+              data-form-id={HUBSPOT_FORM_ID}
+              data-portal-id={HUBSPOT_PORTAL_ID}
+              data-instance-id={instanceId}
+            />
+          ) : null}
           {error ? (
             <p className="book-form-error" role="alert">
               {error}
