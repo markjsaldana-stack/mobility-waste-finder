@@ -16,7 +16,7 @@ export function MemoView({ analysis, onUpload, uploadBusy }: Props) {
     <article className="memo-page">
       <header className="memo-letterhead">
         <div>
-          <p className="memo-mark">Mobility Waste Finding</p>
+          <p className="memo-mark">Mark Inc.</p>
           <p className="memo-firm">Prepared from the attached carrier invoice</p>
         </div>
         <p className="memo-exhibit">Exhibit A</p>

@@ -65,7 +65,7 @@ export function BookCta({ sample = false, onUpload, uploadBusy = false }: Props)
     <aside className="book-cta no-print">
       <p className="book-cta-lead">Ready to see clearly and spend better?</p>
       <button type="button" className="book-cta-btn" aria-haspopup="dialog" onClick={show}>
-        Book a time with Brightfin
+        Book a time with Mark Inc.
       </button>
       {sample && onUpload ? (
         <p className="book-cta-alt">
@@ -102,7 +102,7 @@ export function BookCta({ sample = false, onUpload, uploadBusy = false }: Props)
       >
         <div className="book-dialog-sheet">
           <p id={titleId} className="book-dialog-copy">
-            Book a time with Brightfin
+            Book a time with Mark Inc.
           </p>
           <p className="book-dialog-note">
             Enter your work email and you’ll be able to book a time with us. No spreadsheet

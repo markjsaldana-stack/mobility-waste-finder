@@ -730,7 +730,7 @@ def analyze(rows: list[Row]) -> None:
 def main() -> None:
     rows = build()
     analyze(rows)
-    out = Path(__file__).resolve().parents[1] / "public" / "brightfin_sample_invoice_2026-08.csv"
+    out = Path(__file__).resolve().parents[1] / "public" / "sample_invoice_2026-08.csv"
     out.parent.mkdir(parents=True, exist_ok=True)
     with out.open("w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=COLUMNS)

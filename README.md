@@ -1,8 +1,6 @@
 # Mobility Waste Finder
 
-A browser-only audit of a wireless carrier invoice. Drop in a CSV export, get the specific lines that are wasting money, and print a one-page memo Finance can actually read.
-
-Built as a working demo for a Brightfin conversation. The job of Brightfin’s public savings estimator is to qualify a lead and start a savings conversation — by asking the buyer to guess their own waste. This tool does the same marketing job with evidence instead of a slider.
+A browser-only audit of a wireless carrier invoice from **Mark Inc.** Drop in a CSV export, get the specific lines that are wasting money, and print a one-page memo Finance can actually read.
 
 Your file never leaves the browser. There is no backend, no login, and no upload.
 
@@ -39,7 +37,7 @@ The findings view is for the IT manager. **Memo to Finance** is the printable on
 
 ## Sample file
 
-`public/brightfin_sample_invoice_2026-08.csv` is a synthetic 590-line enterprise export for August 2026. Expected result:
+`public/sample_invoice_2026-08.csv` is a synthetic 590-line enterprise export for August 2026. Expected result:
 
 | | Lines | Monthly | Annual |
 | --- | ---: | ---: | ---: |
@@ -52,7 +50,7 @@ The findings view is for the IT manager. **Memo to Finance** is the printable on
 | Oversized plan for usage | 52 | $2,020.00 | $24,240.00 |
 | **Total recoverable** | **210** | **$10,766.45** | **$129,197.40** |
 
-That is 28.2% of $38,119.12 monthly spend ($457,429.44 annualized), inside Brightfin’s published 20–30% average cost reduction.
+That is 28.2% of $38,119.12 monthly spend ($457,429.44 annualized).
 
 Regenerate only if the brief’s numbers change:
 
@@ -75,4 +73,4 @@ npx vercel dist
 
 Or connect the repo to Vercel and use the default Vite preset.
 
-The **Book a time with Brightfin** button embeds the HubSpot form in the page, so conditional fields (company, employees, industry, and whatever else is configured in HubSpot) appear as HubSpot intended. The invoice still never leaves the browser. Override the form with `VITE_HUBSPOT_PORTAL_ID` and `VITE_HUBSPOT_FORM_ID` if you swap forms; the defaults match [this Brightfin form](https://uyx07.share.hsforms.com/27I4_-THxSVer-iJttDDHug).
+The **Book a time with Mark Inc.** button embeds a HubSpot form in the page, so conditional fields (company, employees, industry, and whatever else is configured in HubSpot) appear as HubSpot intended. The invoice still never leaves the browser. Override the form with `VITE_HUBSPOT_PORTAL_ID` and `VITE_HUBSPOT_FORM_ID` if you swap forms; the defaults match [this form](https://uyx07.share.hsforms.com/27I4_-THxSVer-iJttDDHug).

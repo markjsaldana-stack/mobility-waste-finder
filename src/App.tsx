@@ -10,7 +10,7 @@ import { schemaIsComplete, skippedFields, suggestMapping, type ColumnMapping } f
 import { parseCsvTable, parseInvoiceCsv, rowsFromMapping, type CsvTable } from "./engine/parse"
 import type { Analysis } from "./engine/types"
 
-const SAMPLE_PATH = "/brightfin_sample_invoice_2026-08.csv"
+const SAMPLE_PATH = "/sample_invoice_2026-08.csv"
 const REVIEW_MS = 820
 
 type Screen = "findings" | "memo"
@@ -172,7 +172,7 @@ export default function App() {
         <header className="masthead no-print">
           <div className="masthead-left">
             <p className="wordmark">Mobility Waste Finder</p>
-            <p className="masthead-sub">A findings document, not a dashboard.</p>
+            <p className="masthead-sub">Mark Inc. · a findings document, not a dashboard.</p>
           </div>
           <div className="masthead-right">
             <p className="masthead-stamp">Confidential · in-browser</p>

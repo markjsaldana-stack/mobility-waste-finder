@@ -4,7 +4,7 @@ import { analyze } from "./analyze"
 import { parseInvoiceCsv } from "./parse"
 import { toCents } from "./money"
 
-const csv = readFileSync("public/brightfin_sample_invoice_2026-08.csv", "utf8")
+const csv = readFileSync("public/sample_invoice_2026-08.csv", "utf8")
 
 describe("sample invoice", () => {
   const parsed = parseInvoiceCsv(csv)
